@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="manifest" href="manifest.json">
+    <link rel="stylesheet" href="style.css">
+    <title>QR Code Scanner PWA</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html5-qrcode/2.3.8/html5-qrcode.min.js" integrity="sha512-r6rDA7W6ZeQhvl8S7yRVQUKVHdexq+GAlNkNNqVC7YyIV+NwqCTJe2hDWCiffTyRNOeGEzRRJ9ifvRm/HCzGYg==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+</head>
+<body>
+    <h1>QR Code Scanner</h1>
+    <div id="reader" style="width:600px;"></div>
+    <button id="startScan">Start Scanning</button>
+
+    <script>
+        const reader = new Html5Qrcode("reader");
+
+        document.getElementById("startScan").addEventListener("click", async () => {
+            // Get GPS coordinates
+            navigator.geolocation.getCurrentPosition(async (position) => {
+                const latitude = position.coords.latitude;
+                const longitude = position.coords.longitude;
+                const timestamp = new Date().toISOString();
+
+                // Start scanning for QR codes
+                reader.start(
+                    { facingMode: "environment" }, // Use rear camera
+                    {
+                        fps: 10,
+                        qrbox: 250
+                    },
+                    (decodedText, decodedResult) => {
+                        // Stop scanning after successful read
+                        reader.stop();
+                        
+                        // Create JSON object with data
+                        const jsonData = {
+                            timestamp: timestamp,
+                            latitude: latitude,
+                            longitude: longitude,
+                            qrcodeData: decodedText
+                        };
+
+                        console.log(JSON.stringify(jsonData));
+                    },
+                    (errorMessage) => {
+                        // Handle errors if needed
+                        console.warn(`QR Code scan error: ${errorMessage}`);
+                    }
+                ).catch(err => {
+                    console.error(`Unable to start scanning: ${err}`);
+                });
+            }, (error) => {
+                console.error(`Geolocation error: ${error.message}`);
+            });
+        });
+    </script>
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('service-worker.js')
+                    .then(registration => {
+                        console.log('Service Worker registered with scope:', registration.scope);
+                    })
+                    .catch(error => {
+                        console.error('Service Worker registration failed:', error);
+                    });
+            });
+        }
+    </script>
+      
+</body>
+</html>
