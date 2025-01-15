@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="manifest" href="manifest.json">
     <link rel="stylesheet" href="style.css">
-    <title>QR Code Scanner PWA</title>
+    <title>Delivery Tracker</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html5-qrcode/2.3.8/html5-qrcode.min.js" integrity="sha512-r6rDA7W6ZeQhvl8S7yRVQUKVHdexq+GAlNkNNqVC7YyIV+NwqCTJe2hDWCiffTyRNOeGEzRRJ9ifvRm/HCzGYg==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
@@ -41,7 +41,6 @@
     </style>
 </head>
 <body>
-    <h1>QR Code Scanner PWA</h1>
     <div id="auth-section">
         <h2>Sign In</h2>
         <input type="email" id="email" placeholder="Email" required>
@@ -211,7 +210,7 @@
                                             loadScannedData(); // Reload the scanned data
                                         })
                                         .catch(error => {
-                                            logData(`Error updating data in Firebase: ${error.message}`);
+                                            //logData(`Error updating data in Firebase: ${error.message}`);
                                         });
                                 } else {
                                     // If data does not exist, set new data
@@ -229,14 +228,14 @@
                     },
                     (errorMessage) => {
                         // Log errors during scanning
-                        logData(`QR Code scanning error: ${errorMessage}`);
+                        //logData(`QR Code scanning error: ${errorMessage}`);
                     }
                 )
                 .catch((error) => {
-                    logData(`Error starting the scanner: ${error.message}`);
+                    //logData(`Error starting the scanner: ${error.message}`);
                 });
             }, (error) => {
-                logData(`Geolocation error: ${error.message}`);
+                //logData(`Geolocation error: ${error.message}`);
             });
         });
     </script>
