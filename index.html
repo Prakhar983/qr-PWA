@@ -56,19 +56,21 @@
         <button id="startScan">Start Scanning</button>
         <!-- Table to show the scanned QR data -->
         <h3>Scanned QR Codes</h3>
-        <table id="scannedDataTable" border="1" cellpadding="10">
-            <thead>
-                <tr>
-                    <th>QR Data</th>
-                    <th>Latitude</th>
-                    <th>Longitude</th>
-                    <th>Timestamp</th>
-                </tr>
-            </thead>
-            <tbody id="scannedDataBody">
-                <!-- Data will be populated here -->
-            </tbody>
-        </table>
+        <div style="max-height: 400px; overflow-y: auto;">
+            <table id="scannedDataTable" border="1" cellpadding="10" style="width: 100%; border-collapse: collapse;">
+                <thead>
+                    <tr>
+                        <th>QR Data</th>
+                        <th>Latitude</th>
+                        <th>Longitude</th>
+                        <th>Timestamp</th>
+                    </tr>
+                </thead>
+                <tbody id="scannedDataBody">
+                    <!-- Data will be populated here -->
+                </tbody>
+            </table>
+        </div>
     </div>
 
     <script>
