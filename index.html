@@ -10,12 +10,17 @@
 </head>
 <body>
     <h1>QR Code Scanner</h1>
+    <div id="logdata"></div>
     <div id="reader" style="width:600px;"></div>
     <button id="startScan">Start Scanning</button>
 
+
     <script>
         const reader = new Html5Qrcode("reader");
-
+        function logdata(logentry){
+            var logdiv = document.getElementById("logdata")
+            logdiv.innerHTML = logentry
+        }
         document.getElementById("startScan").addEventListener("click", async () => {
             // Get GPS coordinates
             navigator.geolocation.getCurrentPosition(async (position) => {
@@ -42,17 +47,17 @@
                             qrcodeData: decodedText
                         };
 
-                        console.log(JSON.stringify(jsonData));
+                        logdata(JSON.stringify(jsonData));
                     },
                     (errorMessage) => {
                         // Handle errors if needed
-                        console.warn(`QR Code scan error: ${errorMessage}`);
+                        logdata(`QR Code scan error: ${errorMessage}`);
                     }
                 ).catch(err => {
-                    console.error(`Unable to start scanning: ${err}`);
+                    logdata(`Unable to start scanning: ${err}`);
                 });
             }, (error) => {
-                console.error(`Geolocation error: ${error.message}`);
+                logdata(`Geolocation error: ${error.message}`);
             });
         });
     </script>
@@ -61,10 +66,10 @@
             window.addEventListener('load', () => {
                 navigator.serviceWorker.register('service-worker.js')
                     .then(registration => {
-                        console.log('Service Worker registered with scope:', registration.scope);
+                        logdata('Service Worker registered with scope:', registration.scope);
                     })
                     .catch(error => {
-                        console.error('Service Worker registration failed:', error);
+                        logdata('Service Worker registration failed:', error);
                     });
             });
         }
