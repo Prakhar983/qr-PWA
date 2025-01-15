@@ -177,7 +177,7 @@
                         reader.stop().then(() => {
                             logData(`QR Code scanned: ${decodedText}`);
                             const data = { coordinates: { x: latitude, y: longitude }, timestamp };
-                            const path = `data/scans/${userEmail}/${data}`;
+                            const path = `data/scans/${userEmail}/${decodedText}`;
 
                             database.ref(path).set(data)
                                 .then(() => {
