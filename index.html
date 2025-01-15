@@ -58,21 +58,7 @@
             background-color: #45a049;
         }
 
-        /* Sign-out button */
-        #signOutButton {
-            padding: 10px 20px;
-            background-color: #f44336;
-            color: white;
-            border: none;
-            border-radius: 5px;
-            font-size: 16px;
-            cursor: pointer;
-            margin-top: 20px;
-        }
 
-        #signOutButton:hover {
-            background-color: #e53935;
-        }
     </style>
 </head>
 <body>
@@ -106,7 +92,6 @@
             </table>
         </div>
         <button id="addScanButton">Add Scan</button>
-        <button id="signOutButton">Sign Out</button>
     </div>
 
     <!-- Screen 3: QR Code Scanner -->
@@ -115,7 +100,6 @@
         <div id="logdata"></div>
         <div id="reader" style="width: 100%; max-width: 600px; height: auto; margin: auto;"></div>
         <button id="startScan">Start Scanning</button>
-        <button id="signOutButton">Sign Out</button>
     </div>
 
     <script>
@@ -140,7 +124,6 @@
         const scannerSection = document.getElementById("scanner-section");
         const scannerView = document.getElementById("scanner-view");
         const authMessage = document.getElementById("authMessage");
-        const signOutButton = document.getElementById("signOutButton");
         const startScanButton = document.getElementById("startScan");
         let scannerActive = false;
         let reader = null;
@@ -259,17 +242,6 @@
             } else {
                 startScanning();
             }
-        });
-
-        // Sign-out logic
-        signOutButton.addEventListener("click", () => {
-            auth.signOut().then(() => {
-                authSection.style.display = "block";
-                scannerSection.style.display = "none";
-                scannerView.style.display = "none";
-            }).catch(error => {
-                logData(`Error signing out: ${error.message}`);
-            });
         });
 
         // Function to load the scanned data from Firebase
