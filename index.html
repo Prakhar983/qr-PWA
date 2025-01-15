@@ -140,7 +140,8 @@
                     Object.keys(data).forEach(key => {
                         const scan = data[key];
                         const timestamp = new Date(scan.timestamp);
-                        const formattedDate = timestamp.toLocaleDateString() + '\n' + timestamp.toLocaleTimeString();
+                        const formattedDate = timestamp.toLocaleDateString();
+                        const formattedTime = timestamp.toLocaleTimeString();
 
                         // Limit latitude and longitude to 7 decimal places
                         const formattedLatitude = scan.coordinates.x.toFixed(5);
@@ -154,7 +155,7 @@
                             <td>${truncatedBarcodeData}</td>
                             <td>${formattedLatitude}</td>
                             <td>${formattedLongitude}</td>
-                            <td>${formattedDate}</td>
+                            <td>${formattedDate}<br>${formattedTime}</td>
                         `;
                         scannedDataBody.appendChild(row);
                     });
