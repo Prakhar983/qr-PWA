@@ -174,11 +174,17 @@
                     { facingMode: "environment" }, // Use the rear camera
                     { fps: 10, qrbox: { width: 250, height: 250 } }, // Square scanner box
                     (decodedText) => {
+                        // Replace invalid characters with "_"
+                        const safeDecodedText = decodedText.replace(/[.#$[\]]/g, "_");
+
                         reader.stop().then(() => {
                             logData(`QR Code scanned: ${decodedText}`);
-                            const data = { coordinates: { x: latitude, y: longitude }, timestamp };
-                            const path = `data/scans/${userEmail}/${decodedText}`;
 
+                            // Prepare data object
+                            const data = { coordinates: { x: latitude, y: longitude }, timestamp };
+
+                            // Correct Firebase path and set data using the sanitized key
+                            const path = `data/scans/${userEmail}/${safeDecodedText}`;
                             database.ref(path).set(data)
                                 .then(() => {
                                     logData("Data sent to Firebase successfully!");
@@ -192,7 +198,8 @@
                         // Log errors during scanning
                         logData(`QR Code scanning error: ${errorMessage}`);
                     }
-                ).catch((error) => {
+                )
+                .catch((error) => {
                     logData(`Error starting the scanner: ${error.message}`);
                 });
             }, (error) => {
