@@ -1,4 +1,4 @@
-<!-- <!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -7,79 +7,204 @@
     <link rel="stylesheet" href="style.css">
     <title>QR Code Scanner PWA</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html5-qrcode/2.3.8/html5-qrcode.min.js" integrity="sha512-r6rDA7W6ZeQhvl8S7yRVQUKVHdexq+GAlNkNNqVC7YyIV+NwqCTJe2hDWCiffTyRNOeGEzRRJ9ifvRm/HCzGYg==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
 </head>
 <body>
-    <h1>QR Code Scanner</h1>
-    <div id="logdata"></div>
-    <div id="reader" style="width:600px;"></div>
-    <button id="startScan">Start Scanning</button>
-
+    <h1>QR Code Scanner PWA</h1>
+    <div id="auth-section">
+        <h2>Sign In</h2>
+        <input type="email" id="email" placeholder="Email" required>
+        <input type="password" id="password" placeholder="Password" required>
+        <button id="signIn">Sign In</button>
+        <div id="authMessage"></div>
+    </div>
+    <div id="scanner-section" style="display: none;">
+        <h2>QR Code Scanner</h2>
+        <div id="logdata"></div>
+        <div id="reader" style="width: 100%; max-width: 600px; height: auto; margin: auto;"></div>
+        <button id="startScan">Start Scanning</button>
+        <!-- Table to show the scanned QR data -->
+        <h3>Scanned QR Codes</h3>
+        <table id="scannedDataTable" border="1" cellpadding="10">
+            <thead>
+                <tr>
+                    <th>QR Data</th>
+                    <th>Latitude</th>
+                    <th>Longitude</th>
+                    <th>Timestamp</th>
+                </tr>
+            </thead>
+            <tbody id="scannedDataBody">
+                <!-- Data will be populated here -->
+            </tbody>
+        </table>
+    </div>
 
     <script>
+        // Firebase configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyBQErS-EG_X1enQq-WQY4alWGeGSb_0Y58",
+            authDomain: "deliverytracker-eefb5.firebaseapp.com",
+            databaseURL: "https://deliverytracker-eefb5-default-rtdb.firebaseio.com",
+            projectId: "deliverytracker-eefb5",
+            storageBucket: "deliverytracker-eefb5.appspot.com",
+            messagingSenderId: "1062417903444",
+            appId: "1:1062417903444:web:ce50e1e70c959cf053a2c1",
+            measurementId: "G-ZG5N8VMSWZ"
+        };
+
+        // Initialize Firebase
+        firebase.initializeApp(firebaseConfig);
+        const auth = firebase.auth();
+        const database = firebase.database();
+
+        const authSection = document.getElementById("auth-section");
+        const scannerSection = document.getElementById("scanner-section");
+        const authMessage = document.getElementById("authMessage");
+
+        // Sign-in logic
+        document.getElementById("signIn").addEventListener("click", () => {
+            const email = document.getElementById("email").value;
+            const password = document.getElementById("password").value;
+
+            auth.signInWithEmailAndPassword(email, password)
+                .then(() => {
+                    authSection.style.display = "none";
+                    scannerSection.style.display = "block";
+                    authMessage.innerHTML = "";
+                    loadScannedData(); // Load the scanned data for the user
+                })
+                .catch(error => {
+                    authMessage.innerHTML = `Sign-in error: ${error.message}`;
+                });
+        });
+
+        // QR Code Scanner
         const reader = new Html5Qrcode("reader");
-        function logdata(logentry){
-            var logdiv = document.getElementById("logdata")
-            logdiv.innerHTML = logentry
+
+        function logData(message) {
+            const logDiv = document.getElementById("logdata");
+            logDiv.innerHTML = message;
         }
-        document.getElementById("startScan").addEventListener("click", async () => {
-            // Get GPS coordinates
-            navigator.geolocation.getCurrentPosition(async (position) => {
+
+        // Function to load the scanned data from Firebase
+        function loadScannedData() {
+            const user = auth.currentUser;
+            if (!user) {
+                return;
+            }
+
+            const userEmail = user.email.replace(".", "-");
+            const path = `data/scans/${userEmail}`;
+
+            // Get all the scans for the current user
+            database.ref(path).once('value', (snapshot) => {
+                const data = snapshot.val();
+                const scannedDataBody = document.getElementById("scannedDataBody");
+                scannedDataBody.innerHTML = ''; // Clear previous data
+
+                if (data) {
+                    Object.keys(data).forEach(key => {
+                        const scan = data[key];
+                        const timestamp = new Date(scan.timestamp);
+                        const formattedDate = timestamp.toLocaleString(); // Convert timestamp to local date/time
+
+                        const row = document.createElement("tr");
+                        row.innerHTML = `
+                            <td>${key}</td>
+                            <td>${scan.coordinates.x}</td>
+                            <td>${scan.coordinates.y}</td>
+                            <td>${formattedDate}</td>
+                        `;
+                        scannedDataBody.appendChild(row);
+                    });
+                } else {
+                    logData("No scans found.");
+                }
+            });
+        }
+
+        // QR Code scanning logic
+        document.getElementById("startScan").addEventListener("click", () => {
+            logData("Starting scanner...");
+
+            navigator.geolocation.getCurrentPosition((position) => {
                 const latitude = position.coords.latitude;
                 const longitude = position.coords.longitude;
-                const timestamp = new Date().toISOString();
 
-                // Start scanning for QR codes
+                const user = auth.currentUser;
+                if (!user) {
+                    logData("User not authenticated.");
+                    return;
+                }
+
+                const userEmail = user.email.replace(".", "-");
+
                 reader.start(
-                    { facingMode: "environment" }, // Use rear camera
-                    {
-                        fps: 10,
-                        qrbox: 250
-                    },
-                    (decodedText, decodedResult) => {
-                        // Stop scanning after successful read
-                        reader.stop();
-                        
-                        // Create JSON object with data
-                        const jsonData = {
-                            timestamp: timestamp,
-                            latitude: latitude,
-                            longitude: longitude,
-                            qrcodeData: decodedText
-                        };
+                    { facingMode: "environment" }, // Use the rear camera
+                    { fps: 10, qrbox: { width: 250, height: 250 } }, // Square scanner box
+                    (decodedText) => {
+                        // Replace invalid characters with "_"
+                        const safeDecodedText = decodedText.replace(/[.,#\[\\\]$/]/g, '-');
 
-                        logdata(JSON.stringify(jsonData));
+                        reader.stop().then(() => {
+                            logData(`QR Code scanned: ${decodedText}`);
+
+                            // Prepare data object with Firebase server timestamp
+                            const data = {
+                                coordinates: { x: latitude, y: longitude },
+                                timestamp: firebase.database.ServerValue.TIMESTAMP // Use Firebase's server timestamp
+                            };
+
+                            // Correct Firebase path and check if data already exists
+                            const path = `data/scans/${userEmail}/${safeDecodedText}`;
+                            const ref = database.ref(path);
+
+                            // Check if data exists for the QR code
+                            ref.once('value', (snapshot) => {
+                                if (snapshot.exists()) {
+                                    // If data exists, update the data
+                                    ref.update(data)
+                                        .then(() => {
+                                            logData("Data updated in Firebase successfully!");
+                                            loadScannedData(); // Reload the scanned data
+                                        })
+                                        .catch(error => {
+                                            logData(`Error updating data in Firebase: ${error.message}`);
+                                        });
+                                } else {
+                                    // If data does not exist, set new data
+                                    ref.set(data)
+                                        .then(() => {
+                                            logData("Data sent to Firebase successfully!");
+                                            loadScannedData(); // Reload the scanned data
+                                        })
+                                        .catch(error => {
+                                            logData(`Error sending data to Firebase: ${error.message}`);
+                                        });
+                                }
+                            });
+                        });
                     },
                     (errorMessage) => {
-                        // Handle errors if needed
-                        logdata(`QR Code scan error: ${errorMessage}`);
+                        // Log errors during scanning
+                        logData(`QR Code scanning error: ${errorMessage}`);
                     }
-                ).catch(err => {
-                    logdata(`Unable to start scanning: ${err}`);
+                )
+                .catch((error) => {
+                    logData(`Error starting the scanner: ${error.message}`);
                 });
             }, (error) => {
-                logdata(`Geolocation error: ${error.message}`);
+                logData(`Geolocation error: ${error.message}`);
             });
         });
     </script>
-    <script>
-        if ('serviceWorker' in navigator) {
-            window.addEventListener('load', () => {
-                navigator.serviceWorker.register('service-worker.js')
-                    .then(registration => {
-                        logdata('Service Worker registered with scope:', registration.scope);
-                    })
-                    .catch(error => {
-                        logdata('Service Worker registration failed:', error);
-                    });
-            });
-        }
-    </script>
-      
 </body>
 </html>
- -->
 
-<!DOCTYPE html>
+<!-- <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -229,3 +354,4 @@
     </script>
 </body>
 </html>
+ -->
