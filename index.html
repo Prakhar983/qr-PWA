@@ -138,14 +138,14 @@
                     Object.keys(data).forEach(key => {
                         const scan = data[key];
                         const timestamp = new Date(scan.timestamp);
-                        const formattedDate = timestamp.toLocaleString(); // Convert timestamp to local date/time
+                        const formattedDate = timestamp.toLocaleDateString() + '\n' + timestamp.toLocaleTimeString();
 
                         // Limit latitude and longitude to 7 decimal places
-                        const formattedLatitude = scan.coordinates.x.toFixed(7);
-                        const formattedLongitude = scan.coordinates.y.toFixed(7);
+                        const formattedLatitude = scan.coordinates.x.toFixed(5);
+                        const formattedLongitude = scan.coordinates.y.toFixed(5);
 
                         // Truncate the barcode data after 10 characters and append "..."
-                        const truncatedBarcodeData = key.length > 10 ? key.slice(0, 10) + "..." : key;
+                        const truncatedBarcodeData = key.length > 10 ? key.slice(0, 8) + "..." : key;
 
                         const row = document.createElement("tr");
                         row.innerHTML = `
