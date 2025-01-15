@@ -41,6 +41,7 @@
     </style>
 </head>
 <body>
+    <h1>Delivery Tracker</h1>
     <div id="auth-section">
         <h2>Sign In</h2>
         <input type="email" id="email" placeholder="Email" required>
@@ -121,48 +122,63 @@
 
         // Function to load the scanned data from Firebase
         function loadScannedData() {
-            const user = auth.currentUser;
-            if (!user) {
-                return;
-            }
+    const user = auth.currentUser;
+    if (!user) {
+        return;
+    }
 
-            const userEmail = user.email.replace(".", "-");
-            const path = `data/scans/${userEmail}`;
+    const userEmail = user.email.replace(".", "-");
+    const path = `data/scans/${userEmail}`;
 
-            // Get all the scans for the current user
-            database.ref(path).once('value', (snapshot) => {
-                const data = snapshot.val();
-                const scannedDataBody = document.getElementById("scannedDataBody");
-                scannedDataBody.innerHTML = ''; // Clear previous data
+    // Get all the scans for the current user
+    database.ref(path).once('value', (snapshot) => {
+        const data = snapshot.val();
+        const scannedDataBody = document.getElementById("scannedDataBody");
+        scannedDataBody.innerHTML = ''; // Clear previous data
 
-                if (data) {
-                    Object.keys(data).forEach(key => {
-                        const scan = data[key];
-                        const timestamp = new Date(scan.timestamp);
-                        const formattedDate = timestamp.toLocaleDateString();
-                        const formattedTime = timestamp.toLocaleTimeString();
-
-                        // Limit latitude and longitude to 7 decimal places
-                        const formattedLatitude = scan.coordinates.x.toFixed(5);
-                        const formattedLongitude = scan.coordinates.y.toFixed(5);
-
-                        // Truncate the barcode data after 10 characters and append "..."
-                        const truncatedBarcodeData = key.length > 10 ? key.slice(0, 8) + "..." : key;
-
-                        const row = document.createElement("tr");
-                        row.innerHTML = `
-                            <td>${truncatedBarcodeData}</td>
-                            <td>${formattedLatitude}</td>
-                            <td>${formattedLongitude}</td>
-                            <td>${formattedDate}<br>${formattedTime}</td>
-                        `;
-                        scannedDataBody.appendChild(row);
-                    });
-                } else {
-                    logData("No scans found.");
-                }
+        if (data) {
+            // Convert the data object into an array of scan entries
+            const scanEntries = Object.keys(data).map(key => {
+                const scan = data[key];
+                const timestamp = new Date(scan.timestamp);
+                return {
+                    key,
+                    timestamp,
+                    scan
+                };
             });
+
+            // Sort the array of scans in descending order based on the timestamp
+            scanEntries.sort((a, b) => b.timestamp - a.timestamp);
+
+            // Loop through the sorted data and display it
+            scanEntries.forEach(entry => {
+                const scan = entry.scan;
+                const timestamp = entry.timestamp;
+                const formattedDate = timestamp.toLocaleDateString();
+                const formattedTime = timestamp.toLocaleTimeString();
+
+                // Limit latitude and longitude to 5 decimal places
+                const formattedLatitude = scan.coordinates.x.toFixed(5);
+                const formattedLongitude = scan.coordinates.y.toFixed(5);
+
+                // Truncate the barcode data after 10 characters and append "..."
+                const truncatedBarcodeData = entry.key.length > 10 ? entry.key.slice(0, 8) + "..." : entry.key;
+
+                const row = document.createElement("tr");
+                row.innerHTML = `
+                    <td>${truncatedBarcodeData}</td>
+                    <td>${formattedLatitude}</td>
+                    <td>${formattedLongitude}</td>
+                    <td>${formattedDate}<br>${formattedTime}</td>
+                `;
+                scannedDataBody.appendChild(row);
+            });
+        } else {
+            logData("No scans found.");
         }
+    });
+}
 
         // QR Code scanning logic
         document.getElementById("startScan").addEventListener("click", () => {
