@@ -174,7 +174,7 @@
 
                 reader.start(
                     { facingMode: "environment" }, // Use the rear camera
-                    { fps: 10, qrbox: { width: qrboxSize, height: qrboxSize } }, // Square scanner box
+                    { fps: 10, qrbox: { width: 250, height: 250 } }, // Square scanner box
                     (decodedText) => {
                         reader.stop().then(() => {
                             logData(`QR Code scanned: ${decodedText}`);
