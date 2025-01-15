@@ -230,6 +230,7 @@
                     logData("Scanning stopped.");
                     scannerActive = false;
                     startScanButton.innerText = "Start Scanning";
+                    showScannerSection()
                 }).catch((error) => {
                     //logData(`Error stopping the scanner: ${error.message}`);
                 });
@@ -306,7 +307,6 @@
     </script>
 </body>
 </html>
-
 
 
 
