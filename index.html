@@ -155,56 +155,77 @@
         }
 
         document.getElementById("startScan").addEventListener("click", () => {
-            logData("Starting scanner...");
+    logData("Starting scanner...");
 
-            navigator.geolocation.getCurrentPosition((position) => {
-                const latitude = position.coords.latitude;
-                const longitude = position.coords.longitude;
+    navigator.geolocation.getCurrentPosition((position) => {
+        const latitude = position.coords.latitude;
+        const longitude = position.coords.longitude;
 
-                const user = auth.currentUser;
-                if (!user) {
-                    logData("User not authenticated.");
-                    return;
-                }
+        const user = auth.currentUser;
+        if (!user) {
+            logData("User not authenticated.");
+            return;
+        }
 
-                const userEmail = user.email.replace(".", "-");
-                
-                reader.start(
-                    { facingMode: "environment" }, // Use the rear camera
-                    { fps: 10, qrbox: { width: 250, height: 250 } }, // Square scanner box
-                    (decodedText) => {
-                        // Replace invalid characters with "_"
-                        const safeDecodedText = decodedText.replace(/[.,#\[\\\]$/]/g, '-');
+        const userEmail = user.email.replace(".", "-");
 
-                        reader.stop().then(() => {
-                            logData(`QR Code scanned: ${decodedText}`);
+        reader.start(
+            { facingMode: "environment" }, // Use the rear camera
+            { fps: 10, qrbox: { width: 250, height: 250 } }, // Square scanner box
+            (decodedText) => {
+                // Replace invalid characters with "_"
+                const safeDecodedText = decodedText.replace(/[.,#\[\\\]$/]/g, '-');
 
-                            // Prepare data object
-                            const data = { coordinates: { x: latitude, y: longitude }, timestamp:firebase.database.ServerValue.TIMESTAMP };
+                reader.stop().then(() => {
+                    logData(`QR Code scanned: ${decodedText}`);
 
-                            // Correct Firebase path and set data using the sanitized key
-                            const path = `data/scans/${userEmail}/${safeDecodedText}`;
-                            database.ref(path).set(data)
+                    // Prepare data object with Firebase server timestamp
+                    const data = {
+                        coordinates: { x: latitude, y: longitude },
+                        timestamp: firebase.database.ServerValue.TIMESTAMP // Use Firebase's server timestamp
+                    };
+
+                    // Correct Firebase path and check if data already exists
+                    const path = `data/scans/${userEmail}/${safeDecodedText}`;
+                    const ref = database.ref(path);
+
+                    // Check if data exists for the QR code
+                    ref.once('value', (snapshot) => {
+                        if (snapshot.exists()) {
+                            // If data exists, update the data
+                            ref.update(data)
+                                .then(() => {
+                                    logData("Data updated in Firebase successfully!");
+                                })
+                                .catch(error => {
+                                    logData(`Error updating data in Firebase: ${error.message}`);
+                                });
+                        } else {
+                            // If data does not exist, set new data
+                            ref.set(data)
                                 .then(() => {
                                     logData("Data sent to Firebase successfully!");
                                 })
                                 .catch(error => {
                                     logData(`Error sending data to Firebase: ${error.message}`);
                                 });
-                        });
-                    },
-                    (errorMessage) => {
-                        // Log errors during scanning
-                        logData(`QR Code scanning error: ${errorMessage}`);
-                    }
-                )
-                .catch((error) => {
-                    logData(`Error starting the scanner: ${error.message}`);
+                        }
+                    });
                 });
-            }, (error) => {
-                logData(`Geolocation error: ${error.message}`);
-            });
+            },
+            (errorMessage) => {
+                // Log errors during scanning
+                logData(`QR Code scanning error: ${errorMessage}`);
+            }
+        )
+        .catch((error) => {
+            logData(`Error starting the scanner: ${error.message}`);
         });
+    }, (error) => {
+        logData(`Geolocation error: ${error.message}`);
+    });
+});
+
     </script>
 </body>
 </html>
