@@ -10,6 +10,35 @@
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+    <style>
+        /* Mobile responsive styling for the table */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        table th, table td {
+            text-align: left;
+            padding: 8px;
+            word-wrap: break-word;
+        }
+        table th {
+            background-color: #f2f2f2;
+        }
+        table td {
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            max-width: 150px;
+        }
+        @media (max-width: 600px) {
+            table th, table td {
+                padding: 6px;
+            }
+            table td {
+                max-width: 100px;
+            }
+        }
+    </style>
 </head>
 <body>
     <h1>QR Code Scanner PWA</h1>
@@ -111,11 +140,18 @@
                         const timestamp = new Date(scan.timestamp);
                         const formattedDate = timestamp.toLocaleString(); // Convert timestamp to local date/time
 
+                        // Limit latitude and longitude to 7 decimal places
+                        const formattedLatitude = scan.coordinates.x.toFixed(7);
+                        const formattedLongitude = scan.coordinates.y.toFixed(7);
+
+                        // Truncate the barcode data after 10 characters and append "..."
+                        const truncatedBarcodeData = key.length > 10 ? key.slice(0, 10) + "..." : key;
+
                         const row = document.createElement("tr");
                         row.innerHTML = `
-                            <td>${key}</td>
-                            <td>${scan.coordinates.x}</td>
-                            <td>${scan.coordinates.y}</td>
+                            <td>${truncatedBarcodeData}</td>
+                            <td>${formattedLatitude}</td>
+                            <td>${formattedLongitude}</td>
                             <td>${formattedDate}</td>
                         `;
                         scannedDataBody.appendChild(row);
@@ -203,6 +239,7 @@
     </script>
 </body>
 </html>
+
 
 <!-- <!DOCTYPE html>
 <html lang="en">
