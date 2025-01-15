@@ -169,9 +169,7 @@
                 }
 
                 const userEmail = user.email.replace(".", "-");
-
-                const qrboxSize = Math.min(window.innerWidth, 250); // Adjust to ensure it's square and fits mobile screens
-
+                
                 reader.start(
                     { facingMode: "environment" }, // Use the rear camera
                     { fps: 10, qrbox: { width: 250, height: 250 } }, // Square scanner box
@@ -179,7 +177,7 @@
                         reader.stop().then(() => {
                             logData(`QR Code scanned: ${decodedText}`);
                             const data = { coordinates: { x: latitude, y: longitude }, timestamp };
-                            const path = `data/scans/${userEmail}/${decodedText}`;
+                            const path = `data/scans/${userEmail}/${data}`;
 
                             database.ref(path).set(data)
                                 .then(() => {
