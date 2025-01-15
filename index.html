@@ -57,6 +57,22 @@
         #addScanButton:hover {
             background-color: #45a049;
         }
+
+        /* Sign-out button */
+        #signOutButton {
+            padding: 10px 20px;
+            background-color: #f44336;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            font-size: 16px;
+            cursor: pointer;
+            margin-top: 20px;
+        }
+
+        #signOutButton:hover {
+            background-color: #e53935;
+        }
     </style>
 </head>
 <body>
@@ -90,6 +106,7 @@
             </table>
         </div>
         <button id="addScanButton">Add Scan</button>
+        <button id="signOutButton">Sign Out</button>
     </div>
 
     <!-- Screen 3: QR Code Scanner -->
@@ -98,6 +115,7 @@
         <div id="logdata"></div>
         <div id="reader" style="width: 100%; max-width: 600px; height: auto; margin: auto;"></div>
         <button id="startScan">Start Scanning</button>
+        <button id="signOutButton">Sign Out</button>
     </div>
 
     <script>
@@ -122,6 +140,10 @@
         const scannerSection = document.getElementById("scanner-section");
         const scannerView = document.getElementById("scanner-view");
         const authMessage = document.getElementById("authMessage");
+        const signOutButton = document.getElementById("signOutButton");
+        const startScanButton = document.getElementById("startScan");
+        let scannerActive = false;
+        let reader = null;
 
         // Sign-in logic
         document.getElementById("signIn").addEventListener("click", () => {
@@ -154,12 +176,101 @@
         }
 
         // QR Code Scanner logic
-        const reader = new Html5Qrcode("reader");
+        function startScanning() {
+            navigator.geolocation.getCurrentPosition((position) => {
+                const latitude = position.coords.latitude;
+                const longitude = position.coords.longitude;
 
-        function logData(message) {
-            const logDiv = document.getElementById("logdata");
-            logDiv.innerHTML = message;
+                const user = auth.currentUser;
+                if (!user) {
+                    logData("User not authenticated.");
+                    return;
+                }
+
+                const userEmail = user.email.replace(".", "-");
+
+                reader = new Html5Qrcode("reader");
+
+                reader.start(
+                    { facingMode: "environment" }, 
+                    { fps: 10, qrbox: { width: 250, height: 250 } }, 
+                    (decodedText) => {
+                        const safeDecodedText = decodedText.replace(/[.,#\[\\\]$/]/g, '-');
+
+                        reader.stop().then(() => {
+                            logData(`QR Code scanned: ${decodedText}`);
+
+                            const data = {
+                                coordinates: { x: latitude, y: longitude },
+                                timestamp: firebase.database.ServerValue.TIMESTAMP 
+                            };
+
+                            const path = `data/scans/${userEmail}/${safeDecodedText}`;
+                            const ref = database.ref(path);
+
+                            ref.once('value', (snapshot) => {
+                                if (snapshot.exists()) {
+                                    ref.update(data).then(() => {
+                                        logData("Data updated in Firebase successfully!");
+                                        showScannerSection(); 
+                                    }).catch(error => {
+                                        //logData(`Error updating data in Firebase: ${error.message}`);
+                                    });
+                                } else {
+                                    ref.set(data).then(() => {
+                                        logData("Data sent to Firebase successfully!");
+                                        showScannerSection();
+                                    }).catch(error => {
+                                        logData(`Error sending data to Firebase: ${error.message}`);
+                                    });
+                                }
+                            });
+                        });
+                    },
+                    (errorMessage) => {
+                        //logData(`QR Code scanning error: ${errorMessage}`);
+                    }
+                )
+                .catch((error) => {
+                    //logData(`Error starting the scanner: ${error.message}`);
+                });
+                scannerActive = true;
+                startScanButton.innerText = "Stop Scanning";
+            }, (error) => {
+                //logData(`Geolocation error: ${error.message}`);
+            });
         }
+
+        function stopScanning() {
+            if (reader) {
+                reader.stop().then(() => {
+                    logData("Scanning stopped.");
+                    scannerActive = false;
+                    startScanButton.innerText = "Start Scanning";
+                }).catch((error) => {
+                    //logData(`Error stopping the scanner: ${error.message}`);
+                });
+            }
+        }
+
+        startScanButton.addEventListener("click", () => {
+            if (scannerActive) {
+                stopScanning();
+            } else {
+                startScanning();
+            }
+        });
+
+        // Sign-out logic
+        signOutButton.addEventListener("click", () => {
+            auth.signOut().then(() => {
+                authSection.style.display = "block";
+                scannerSection.style.display = "none";
+                scannerView.style.display = "none";
+            }).catch(error => {
+                logData(`Error signing out: ${error.message}`);
+            });
+        });
 
         // Function to load the scanned data from Firebase
         function loadScannedData() {
@@ -216,72 +327,14 @@
             });
         }
 
-        // QR Code scanning logic
-        document.getElementById("startScan").addEventListener("click", () => {
-            logData("Starting scanner...");
-
-            navigator.geolocation.getCurrentPosition((position) => {
-                const latitude = position.coords.latitude;
-                const longitude = position.coords.longitude;
-
-                const user = auth.currentUser;
-                if (!user) {
-                    logData("User not authenticated.");
-                    return;
-                }
-
-                const userEmail = user.email.replace(".", "-");
-
-                reader.start(
-                    { facingMode: "environment" }, 
-                    { fps: 10, qrbox: { width: 250, height: 250 } }, 
-                    (decodedText) => {
-                        const safeDecodedText = decodedText.replace(/[.,#\[\\\]$/]/g, '-');
-
-                        reader.stop().then(() => {
-                            logData(`QR Code scanned: ${decodedText}`);
-
-                            const data = {
-                                coordinates: { x: latitude, y: longitude },
-                                timestamp: firebase.database.ServerValue.TIMESTAMP 
-                            };
-
-                            const path = `data/scans/${userEmail}/${safeDecodedText}`;
-                            const ref = database.ref(path);
-
-                            ref.once('value', (snapshot) => {
-                                if (snapshot.exists()) {
-                                    ref.update(data).then(() => {
-                                        logData("Data updated in Firebase successfully!");
-                                        showScannerSection(); 
-                                    }).catch(error => {
-                                        //logData(`Error updating data in Firebase: ${error.message}`);
-                                    });
-                                } else {
-                                    ref.set(data).then(() => {
-                                        logData("Data sent to Firebase successfully!");
-                                        showScannerSection();
-                                    }).catch(error => {
-                                        logData(`Error sending data to Firebase: ${error.message}`);
-                                    });
-                                }
-                            });
-                        });
-                    },
-                    (errorMessage) => {
-                        //logData(`QR Code scanning error: ${errorMessage}`);
-                    }
-                )
-                .catch((error) => {
-                    //logData(`Error starting the scanner: ${error.message}`);
-                });
-            }, (error) => {
-                //logData(`Geolocation error: ${error.message}`);
-            });
-        });
+        function logData(message) {
+            const logDiv = document.getElementById("logdata");
+            logDiv.innerHTML = message;
+        }
     </script>
 </body>
 </html>
+
 
 
 
