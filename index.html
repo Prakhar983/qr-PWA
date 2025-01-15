@@ -42,6 +42,8 @@
 </head>
 <body>
     <h1>Delivery Tracker</h1>
+
+    <!-- Screen 1: Sign In -->
     <div id="auth-section">
         <h2>Sign In</h2>
         <input type="email" id="email" placeholder="Email" required>
@@ -49,13 +51,10 @@
         <button id="signIn">Sign In</button>
         <div id="authMessage"></div>
     </div>
+
+    <!-- Screen 2: Scanned Data Table -->
     <div id="scanner-section" style="display: none;">
-        <h2>QR Code Scanner</h2>
-        <div id="logdata"></div>
-        <div id="reader" style="width: 100%; max-width: 600px; height: auto; margin: auto;"></div>
-        <button id="startScan">Start Scanning</button>
-        <!-- Table to show the scanned QR data -->
-        <h3>Scanned QR Codes</h3>
+        <h2>Scanned Data</h2>
         <div style="max-height: 400px; overflow-y: auto;">
             <table id="scannedDataTable" border="1" cellpadding="10" style="width: 100%; border-collapse: collapse;">
                 <thead style="position: sticky; top: 0; background-color: #f2f2f2;">
@@ -71,6 +70,15 @@
                 </tbody>
             </table>
         </div>
+        <button id="addScanButton">Add Scan</button>
+    </div>
+
+    <!-- Screen 3: QR Code Scanner -->
+    <div id="scanner-view" style="display: none;">
+        <h2>QR Code Scanner</h2>
+        <div id="logdata"></div>
+        <div id="reader" style="width: 100%; max-width: 600px; height: auto; margin: auto;"></div>
+        <button id="startScan">Start Scanning</button>
     </div>
 
     <script>
@@ -93,6 +101,7 @@
 
         const authSection = document.getElementById("auth-section");
         const scannerSection = document.getElementById("scanner-section");
+        const scannerView = document.getElementById("scanner-view");
         const authMessage = document.getElementById("authMessage");
 
         // Sign-in logic
@@ -112,7 +121,20 @@
                 });
         });
 
-        // QR Code Scanner
+        // Show QR code scanner view
+        document.getElementById("addScanButton").addEventListener("click", () => {
+            scannerSection.style.display = "none";
+            scannerView.style.display = "block";
+        });
+
+        // Show the scanned data table
+        function showScannerSection() {
+            scannerView.style.display = "none";
+            scannerSection.style.display = "block";
+            loadScannedData(); // Reload the scanned data
+        }
+
+        // QR Code Scanner logic
         const reader = new Html5Qrcode("reader");
 
         function logData(message) {
@@ -122,63 +144,58 @@
 
         // Function to load the scanned data from Firebase
         function loadScannedData() {
-    const user = auth.currentUser;
-    if (!user) {
-        return;
-    }
+            const user = auth.currentUser;
+            if (!user) {
+                return;
+            }
 
-    const userEmail = user.email.replace(".", "-");
-    const path = `data/scans/${userEmail}`;
+            const userEmail = user.email.replace(".", "-");
+            const path = `data/scans/${userEmail}`;
 
-    // Get all the scans for the current user
-    database.ref(path).once('value', (snapshot) => {
-        const data = snapshot.val();
-        const scannedDataBody = document.getElementById("scannedDataBody");
-        scannedDataBody.innerHTML = ''; // Clear previous data
+            // Get all the scans for the current user
+            database.ref(path).once('value', (snapshot) => {
+                const data = snapshot.val();
+                const scannedDataBody = document.getElementById("scannedDataBody");
+                scannedDataBody.innerHTML = ''; // Clear previous data
 
-        if (data) {
-            // Convert the data object into an array of scan entries
-            const scanEntries = Object.keys(data).map(key => {
-                const scan = data[key];
-                const timestamp = new Date(scan.timestamp);
-                return {
-                    key,
-                    timestamp,
-                    scan
-                };
+                if (data) {
+                    const scanEntries = Object.keys(data).map(key => {
+                        const scan = data[key];
+                        const timestamp = new Date(scan.timestamp);
+                        return {
+                            key,
+                            timestamp,
+                            scan
+                        };
+                    });
+
+                    scanEntries.sort((a, b) => b.timestamp - a.timestamp);
+
+                    scanEntries.forEach(entry => {
+                        const scan = entry.scan;
+                        const timestamp = entry.timestamp;
+                        const formattedDate = timestamp.toLocaleDateString();
+                        const formattedTime = timestamp.toLocaleTimeString();
+
+                        const formattedLatitude = scan.coordinates.x.toFixed(5);
+                        const formattedLongitude = scan.coordinates.y.toFixed(5);
+
+                        const truncatedBarcodeData = entry.key.length > 10 ? entry.key.slice(0, 8) + "..." : entry.key;
+
+                        const row = document.createElement("tr");
+                        row.innerHTML = `
+                            <td>${truncatedBarcodeData}</td>
+                            <td>${formattedLatitude}</td>
+                            <td>${formattedLongitude}</td>
+                            <td>${formattedDate}<br>${formattedTime}</td>
+                        `;
+                        scannedDataBody.appendChild(row);
+                    });
+                } else {
+                    logData("No scans found.");
+                }
             });
-
-            // Sort the array of scans in descending order based on the timestamp
-            scanEntries.sort((a, b) => b.timestamp - a.timestamp);
-
-            // Loop through the sorted data and display it
-            scanEntries.forEach(entry => {
-                const scan = entry.scan;
-                const timestamp = entry.timestamp;
-                const formattedDate = timestamp.toLocaleDateString();
-                const formattedTime = timestamp.toLocaleTimeString();
-
-                // Limit latitude and longitude to 5 decimal places
-                const formattedLatitude = scan.coordinates.x.toFixed(5);
-                const formattedLongitude = scan.coordinates.y.toFixed(5);
-
-                // Truncate the barcode data after 10 characters and append "..."
-                const truncatedBarcodeData = entry.key.length > 10 ? entry.key.slice(0, 8) + "..." : entry.key;
-
-                const row = document.createElement("tr");
-                row.innerHTML = `
-                    <td>${truncatedBarcodeData}</td>
-                    <td>${formattedLatitude}</td>
-                    <td>${formattedLongitude}</td>
-                    <td>${formattedDate}<br>${formattedTime}</td>
-                `;
-                scannedDataBody.appendChild(row);
-            });
-        } else {
-            logData("No scans found.");
         }
-    });
-}
 
         // QR Code scanning logic
         document.getElementById("startScan").addEventListener("click", () => {
@@ -197,53 +214,42 @@
                 const userEmail = user.email.replace(".", "-");
 
                 reader.start(
-                    { facingMode: "environment" }, // Use the rear camera
-                    { fps: 10, qrbox: { width: 250, height: 250 } }, // Square scanner box
+                    { facingMode: "environment" }, 
+                    { fps: 10, qrbox: { width: 250, height: 250 } }, 
                     (decodedText) => {
-                        // Replace invalid characters with "_"
                         const safeDecodedText = decodedText.replace(/[.,#\[\\\]$/]/g, '-');
 
                         reader.stop().then(() => {
                             logData(`QR Code scanned: ${decodedText}`);
 
-                            // Prepare data object with Firebase server timestamp
                             const data = {
                                 coordinates: { x: latitude, y: longitude },
-                                timestamp: firebase.database.ServerValue.TIMESTAMP // Use Firebase's server timestamp
+                                timestamp: firebase.database.ServerValue.TIMESTAMP 
                             };
 
-                            // Correct Firebase path and check if data already exists
                             const path = `data/scans/${userEmail}/${safeDecodedText}`;
                             const ref = database.ref(path);
 
-                            // Check if data exists for the QR code
                             ref.once('value', (snapshot) => {
                                 if (snapshot.exists()) {
-                                    // If data exists, update the data
-                                    ref.update(data)
-                                        .then(() => {
-                                            logData("Data updated in Firebase successfully!");
-                                            loadScannedData(); // Reload the scanned data
-                                        })
-                                        .catch(error => {
-                                            //logData(`Error updating data in Firebase: ${error.message}`);
-                                        });
+                                    ref.update(data).then(() => {
+                                        logData("Data updated in Firebase successfully!");
+                                        showScannerSection(); 
+                                    }).catch(error => {
+                                        //logData(`Error updating data in Firebase: ${error.message}`);
+                                    });
                                 } else {
-                                    // If data does not exist, set new data
-                                    ref.set(data)
-                                        .then(() => {
-                                            logData("Data sent to Firebase successfully!");
-                                            loadScannedData(); // Reload the scanned data
-                                        })
-                                        .catch(error => {
-                                            logData(`Error sending data to Firebase: ${error.message}`);
-                                        });
+                                    ref.set(data).then(() => {
+                                        logData("Data sent to Firebase successfully!");
+                                        showScannerSection();
+                                    }).catch(error => {
+                                        logData(`Error sending data to Firebase: ${error.message}`);
+                                    });
                                 }
                             });
                         });
                     },
                     (errorMessage) => {
-                        // Log errors during scanning
                         //logData(`QR Code scanning error: ${errorMessage}`);
                     }
                 )
@@ -257,6 +263,7 @@
     </script>
 </body>
 </html>
+
 
 
 <!-- <!DOCTYPE html>
