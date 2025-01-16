@@ -1,53 +1,70 @@
-# QR Code Scanner PWA
+# Getting Started with Create React App
 
-This project is a Progressive Web App (PWA) that utilizes the `html5-qrcode` library to scan QR codes and log the scanned data along with GPS coordinates.
+This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
 
-## Getting Started
+## Available Scripts
 
-Follow these steps to set up and run the QR Code Scanner PWA on your local machine.
+In the project directory, you can run:
 
-### Prerequisites
+### `npm start`
 
-Make sure you have Node.js installed on your machine. You can download it from [nodejs.org](https://nodejs.org/).
+Runs the app in the development mode.\
+Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
 
-### Step 1: Install http-server
+The page will reload when you make changes.\
+You may also see any lint errors in the console.
 
-To serve your application locally, you'll need to install `http-server`. Open your terminal and run:
+### `npm test`
 
-```bash
-npm install -g http-server
-```
+Launches the test runner in the interactive watch mode.\
+See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
 
-### Step 2: Start the Server
+### `npm run build`
 
-Navigate to the project directory where your `index.html` file is located. Then, run the following command to start the server:
+Builds the app for production to the `build` folder.\
+It correctly bundles React in production mode and optimizes the build for the best performance.
 
-```bash
-http-server
-```
+The build is minified and the filenames include the hashes.\
+Your app is ready to be deployed!
 
-### Step 3: Access the Application
+See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
 
-Once the server is running, open your web browser and go to:
+### `npm run eject`
 
-```
-http://localhost:8080
-```
+**Note: this is a one-way operation. Once you `eject`, you can't go back!**
 
-Replace `8080` with the port number displayed in your terminal if it's different.
+If you aren't satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
 
-### Features
+Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you're on your own.
 
-- **QR Code Scanning**: Use the device's camera to scan QR codes.
-- **Geolocation**: Captures the current GPS coordinates when a QR code is scanned.
-- **JSON Data Logging**: Logs scanned data along with geolocation in JSON format.
-- **JSON Data uploading to Firebase**: Uploads the data to the Firebase Realtime Database.
+You don't have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn't feel obligated to use this feature. However we understand that this tool wouldn't be useful if you couldn't customize it when you are ready for it.
 
-### Notes
+## Learn More
 
-- Ensure that you allow camera and location permissions when prompted by your browser.
-- This PWA can be installed on supported devices for offline access.
+You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
 
-### Troubleshooting
+To learn React, check out the [React documentation](https://reactjs.org/).
 
-If you encounter a "404 Not Found" error for `style.css` or `favicon.ico`, ensure that these files are present in your project directory. 
+### Code Splitting
+
+This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
+
+### Analyzing the Bundle Size
+
+This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
+
+### Making a Progressive Web App
+
+This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
+
+### Advanced Configuration
+
+This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
+
+### Deployment
+
+This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
+
+### `npm run build` fails to minify
+
+This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
