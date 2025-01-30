@@ -4,23 +4,24 @@ self.addEventListener('install', (event) => {
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => {
       return cache.addAll([
-        '/',
-        '/index.html',
-        '/static/js/bundle.js',
-        '/static/css/main.css',
+        '/qr-PWA/', // Root path (adjust if your app is in a subdirectory)
+        '/qr-PWA/index.html', // Path to index.html
+        '/qr-PWA/static/js/bundle.js', // Path to JS bundle
+        '/qr-PWA/static/css/main.css', // Path to CSS file
         // Add other assets here
       ]);
     })
   );
 });
 
-// service-worker.js
+// Listen for SKIP_WAITING message
 self.addEventListener("message", (event) => {
   if (event.data && event.data.type === "SKIP_WAITING") {
     self.skipWaiting(); // Activate the new Service Worker
   }
 });
 
+// Clean up old caches
 self.addEventListener('activate', (event) => {
   event.waitUntil(
     caches.keys().then((cacheNames) => {
