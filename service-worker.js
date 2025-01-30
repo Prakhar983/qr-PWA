@@ -1,4 +1,4 @@
-const CACHE_NAME = 'my-pwa-v1.0.4'; // Update this for new versions
+const CACHE_NAME = 'my-pwa-v1.0.5'; // Update this for new versions
 
 self.addEventListener('install', (event) => {
   event.waitUntil(
