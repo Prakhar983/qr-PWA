@@ -6,8 +6,8 @@ self.addEventListener('install', (event) => {
       return cache.addAll([
         '/qr-PWA/', // Root path (adjust if your app is in a subdirectory)
         '/qr-PWA/index.html', // Path to index.html
-        '/qr-PWA/static/js/bundle.js', // Path to JS bundle
-        '/qr-PWA/static/css/main.css', // Path to CSS file
+        '/qr-PWA/static/js/main.4ceb20de.js', // Path to JS bundle
+        '/qr-PWA/static/css/main.15654647.css', // Path to CSS file
         // Add other assets here
       ]);
     })
