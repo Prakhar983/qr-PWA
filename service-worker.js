@@ -1,4 +1,4 @@
-const CACHE_NAME = 'my-pwa-v1.0.1'; // Update this for new versions
+const CACHE_NAME = 'my-pwa-v1.0.2'; // Update this for new versions
 
 self.addEventListener('install', (event) => {
   event.waitUntil(
@@ -14,9 +14,10 @@ self.addEventListener('install', (event) => {
   );
 });
 
+// service-worker.js
 self.addEventListener("message", (event) => {
   if (event.data && event.data.type === "SKIP_WAITING") {
-    self.skipWaiting(); // Force the waiting Service Worker to become active
+    self.skipWaiting(); // Activate the new Service Worker
   }
 });
 
